@@ -11,32 +11,32 @@
   --f-serif: 'Literata','Noto Serif',Georgia,'Songti SC','Microsoft YaHei','Yu Mincho',serif;
   --f-sans:  'Inter','Noto Sans',system-ui,-apple-system,'Segoe UI','Microsoft YaHei','Yu Gothic',sans-serif;
   --f-a11y:  'Atkinson Hyperlegible','Inter','Noto Sans',system-ui,'Microsoft YaHei',sans-serif;
-  --f-mono:  'IBM Plex Mono','Noto Sans Mono',ui-monospace,Consolas,'Microsoft YaHei',monospace;
+  --f-mono:  'IBM Plex Mono', var(--font-monospace, 'Noto Sans Mono'), ui-monospace, Consolas, 'Microsoft YaHei', monospace;
   --f-ui:    var(--font-interface, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif);
 
   --reading: var(--f-serif);
-  --measure: 42rem; --read-size: 1.2rem; --read-leading: 1.78;
-  --r-sm: 8px; --r-md: 11px; --r-lg: 14px; --r-pill: 999px;
+  --measure: 42rem; --read-size: 1.2rem; --read-leading: var(--line-height-normal, 1.78);
+  --r-sm: var(--radius-s, 8px); --r-md: var(--radius-m, 11px); --r-lg: var(--radius-l, 14px); --r-pill: 999px;
   --ease: cubic-bezier(.16,1,.3,1);
   --dur: .24s; --dur-slow: .4s;
   --z-vignette: 5; --z-doc: 10; --z-bar: 40; --z-pop: 60;
 
-  /* ---- default: follow the Obsidian theme ---- */
+  /* ---- default: follow the active Obsidian theme's actual semantic tokens ---- */
   --bg: var(--background-primary, #0b1413);
   --ink: var(--text-normal, #d7e2df);
-  --ink-soft: color-mix(in oklab, var(--ink) 64%, var(--bg));
-  --ink-faint: color-mix(in oklab, var(--ink) 42%, var(--bg));
+  --ink-soft: var(--text-muted, color-mix(in oklab, var(--ink) 64%, var(--bg)));
+  --ink-faint: var(--text-faint, color-mix(in oklab, var(--ink) 42%, var(--bg)));
   --surface: var(--background-secondary, #10201d);
-  --surface-2: color-mix(in oklab, var(--surface) 93%, var(--ink) 7%);
-  --surface-3: color-mix(in oklab, var(--surface) 88%, var(--ink) 12%);
+  --surface-2: var(--background-modifier-hover, color-mix(in oklab, var(--surface) 93%, var(--ink) 7%));
+  --surface-3: color-mix(in oklab, var(--surface-2) 82%, var(--ink) 18%);
   --rule: var(--background-modifier-border, color-mix(in oklab, var(--ink) 16%, transparent));
-  --rule-strong: color-mix(in oklab, var(--ink) 28%, transparent);
+  --rule-strong: var(--background-modifier-border-hover, color-mix(in oklab, var(--ink) 28%, transparent));
   --accent: var(--interactive-accent, #2dd4bf);
   --accent-2: var(--interactive-accent-hover, var(--accent));
   --accent-ink: var(--text-on-accent, #04201c);
-  --code-bg: var(--background-modifier-code, rgba(127,127,127,.12));
+  --code-bg: var(--code-background, rgba(127,127,127,.12));
   --code-ink: var(--ink);
-  --focus: var(--interactive-accent, var(--accent));
+  --focus: var(--background-modifier-border-focus, var(--interactive-accent, var(--accent)));
   --seg-hl: color-mix(in oklab, var(--accent) 18%, transparent);
   --seg-hl-edge: color-mix(in oklab, var(--accent) 50%, transparent);
   --glow: color-mix(in oklab, var(--accent) 42%, transparent);
