@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.DS_Store
+
+# esbuild dev artifacts
+main.js.map
+*.tsbuildinfo
+
+# editor
+.vscode/
+.idea/
