@@ -1,5 +1,5 @@
 /* Markdown Read Aloud — Obsidian reader pane.
-   Default theme FOLLOWS the active Obsidian theme via --background-*/--text-* vars.
+   Default theme FOLLOWS the active Obsidian theme via --background- and --text- vars.
    Study / Daylight / Paper are opt-in overrides. Fonts are bundled (view @font-face). */
 
 .obtts-reader {
