@@ -84,9 +84,14 @@ export default class TtsPlugin extends Plugin {
       })
     );
 
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        if (file instanceof TFile) this.controller.onDocRenamed(file, oldPath);
+      })
+    );
+
     this.statusItem = this.addStatusBarItem();
-    this.statusItem.addClass('obtts-status');
-    this.statusItem.style.display = 'none';
+    this.statusItem.addClass('obtts-status', 'obtts-hidden');
     this.statusItem.addEventListener('click', () => this.controller.control('playpause'));
 
     this.addSettingTab(new TtsSettingTab(this.app, this));
@@ -108,7 +113,7 @@ export default class TtsPlugin extends Plugin {
 
   updateStatusItem(playing: boolean, title: string): void {
     if (!this.statusItem) return;
-    this.statusItem.style.display = '';
+    this.statusItem.removeClass('obtts-hidden');
     const shortTitle = title.length > 24 ? title.slice(0, 23) + '…' : title;
     this.statusItem.setText(`${playing ? '⏸' : '▶'} ${shortTitle}`);
     this.statusItem.setAttribute('aria-label', t('Read Aloud — click to play/pause'));

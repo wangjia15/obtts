@@ -102,6 +102,7 @@ export class TtsSettingTab extends PluginSettingTab {
           .onChange(async (v) => {
             s.speed = v;
             await this.plugin.saveSettings();
+            this.plugin.controller.applyLiveSpeed(v);
           });
       });
 
@@ -114,6 +115,7 @@ export class TtsSettingTab extends PluginSettingTab {
           .onChange(async (v) => {
             s.volume = v;
             await this.plugin.saveSettings();
+            this.plugin.controller.applyLiveVolume(v);
           });
       });
 

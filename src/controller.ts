@@ -118,6 +118,8 @@ export class TtsController implements SynthProvider {
     this.docLocale = autoDetect ? detectLocale(source, fallback).locale : fallback;
     this.activeLocale = this.docLocale;
     this.currentVoice = pickVoice(this.docLocale, this.gender, this.overrides());
+    // Pre-connect the socket for the chosen voice so the first sentence starts fast.
+    if (this.engineId === 'edge') this.engine.warm(this.currentVoice, this.docLocale).catch(() => undefined);
     this.generation++;
     this.hadSuccess = false;
     this.inflight.clear();
@@ -196,6 +198,9 @@ export class TtsController implements SynthProvider {
 
     const cached = this.cache.get(key);
     if (cached) {
+      // Refresh recency so eviction is true LRU, not first-inserted.
+      this.cache.delete(key);
+      this.cache.set(key, cached);
       this.sendAudio(id, cached, loadGen, locale);
       return;
     }
@@ -419,6 +424,29 @@ export class TtsController implements SynthProvider {
       announceHeadings: this.settings.announceHeadings,
       highlight: this.settings.highlightWhileReading,
     };
+  }
+
+  /** Migrate a saved resume position (and the live doc pointer) across a file rename. */
+  onDocRenamed(file: TFile, oldPath: string): void {
+    const all = this.settings.positions;
+    if (all && all[oldPath]) {
+      all[file.path] = all[oldPath];
+      delete all[oldPath];
+      void this.plugin.saveSettings();
+    }
+    if (this.docUri && this.docUri.path === file.path && this.lastLoad && this.lastLoad.docKey === oldPath) {
+      this.lastLoad.docKey = file.path;
+    }
+  }
+
+  /** Live speed change from the settings tab → apply to the open reader immediately. */
+  applyLiveSpeed(value: number): void {
+    this.player?.setExternalRate(value);
+  }
+
+  /** Live volume change from the settings tab → apply to the open reader immediately. */
+  applyLiveVolume(value: number): void {
+    this.player?.setExternalVolume(value);
   }
 
   /** Debounced live re-render of the source note while the reader is open. */

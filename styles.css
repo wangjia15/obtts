@@ -347,3 +347,4 @@
 
 /* status bar mini-player */
 .obtts-status { cursor: pointer; }
+.obtts-status.obtts-hidden { display: none; }

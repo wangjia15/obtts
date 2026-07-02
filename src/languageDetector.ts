@@ -1,6 +1,7 @@
 import { eld } from 'eld/small';
 import { localeForLang } from './voices';
 import { stripForDetection } from './markdown/normalize';
+import { preprocessObsidian } from './markdown/obsidian';
 
 interface DetectResult {
   language?: string;
@@ -24,7 +25,7 @@ function isEldApi(v: unknown): v is EldApi {
  * unreliable or the language isn't supported.
  */
 export function detectLocale(source: string, fallbackLocale: string): { locale: string; lang?: string; reliable: boolean } {
-  const sample = stripForDetection(source).slice(0, 2000);
+  const sample = stripForDetection(preprocessObsidian(source)).slice(0, 2000);
   if (sample.length < 12) return { locale: fallbackLocale, reliable: false };
   if (!eldApi) return { locale: fallbackLocale, reliable: false };
   try {
@@ -45,6 +46,24 @@ export function detectLocale(source: string, fallbackLocale: string): { locale: 
  * the detection is reliable and maps to a supported voice. Short/ambiguous
  * blocks return undefined so the caller can keep the surrounding language.
  */
+/**
+ * Reliable ISO 639-1 language code for a run of text (e.g. "de", "zh"), or
+ * undefined when the text is too short/ambiguous to be sure. Used by the reader
+ * for language badges and the browser-engine voice pick so they agree with the
+ * `eld`-driven synthesis language instead of a separate stop-word heuristic.
+ */
+export function detectLangCode(text: string): string | undefined {
+  const sample = text.trim();
+  if (sample.length < 12 || !eldApi) return undefined;
+  try {
+    const r = eldApi.detect(sample);
+    if (r.language && r.isReliable()) return r.language;
+  } catch {
+    /* ignore */
+  }
+  return undefined;
+}
+
 export function detectReliableLocale(text: string): string | undefined {
   const sample = text.trim();
   if (sample.length < 18) return undefined;

@@ -1,4 +1,5 @@
 import type { Gender } from './types';
+import { detectLangCode } from './languageDetector';
 
 /**
  * ReaderPlayer — a faithful TypeScript port of the reference `media/reader.js`.
@@ -189,8 +190,8 @@ const fmt = (k: string, ...a: (string | number)[]): string =>
 const fmtRate = (r: number): string =>
   (Math.round(r * 100) / 100).toFixed(2).replace(/(\.\d)0$/, '$1') + '×';
 
-/** Cosmetic language heuristic for badges + the browser-engine voice pick. */
-function detectLang(text: string): string {
+/** Fast stop-word/script heuristic — the fallback when `eld` can't commit. */
+function heuristicLang(text: string): string {
   const t = text.toLowerCase();
   if (/[぀-ヿ]/.test(t)) return 'ja';
   if (/[一-鿿]/.test(t)) return 'zh';
@@ -205,6 +206,16 @@ function detectLang(text: string): string {
   let bv = 0;
   for (const k in sc) if (sc[k] > bv) { bv = sc[k]; best = k; }
   return bv === 0 ? 'en' : best;
+}
+
+/**
+ * Block-level language for badges + the browser-engine voice pick. Prefers the
+ * `eld` detector (the same one that drives per-paragraph synthesis) so labels
+ * agree with what is actually spoken, and falls back to the cheap heuristic for
+ * short or ambiguous runs where `eld` won't commit.
+ */
+function detectLang(text: string): string {
+  return detectLangCode(text) || heuristicLang(text);
 }
 
 function sentencesOf(text: string, base: string): { segment: string; index: number }[] {
@@ -508,7 +519,9 @@ export class ReaderPlayer {
       span.dataset.seg = String(this.SEG_SEQ);
       span.appendChild(range.cloneContents());
       const tts = s.segment.replace(/\s+/g, ' ').trim();
-      const lang = detectLang(s.segment) || base;
+      // Reliable per-sentence detection, else inherit the block's language
+      // (short fragments are ambiguous and would otherwise flip to English).
+      const lang = detectLangCode(s.segment) || base;
       span.dataset.lang = lang;
       if (tts) {
         span.tabIndex = -1;
@@ -1610,6 +1623,21 @@ export class ReaderPlayer {
   control(action: 'playpause' | 'stop'): void {
     if (action === 'playpause') this.togglePlay();
     else if (action === 'stop') this.doStop();
+  }
+
+  /** Apply a speed change from an external control (the settings tab). */
+  setExternalRate(value: number): void {
+    if (!Number.isFinite(value)) return;
+    this.setRate(value, false);
+  }
+
+  /** Apply a volume change from an external control (the settings tab). */
+  setExternalVolume(value: number): void {
+    if (!Number.isFinite(value)) return;
+    this.state.volume = Math.min(1, Math.max(0, value));
+    if (this.state.volume > 0) { this.state.lastVol = this.state.volume; this.state.muted = false; }
+    this.applyVolume();
+    this.restartUtterance();
   }
 
   private anchorIndex(anchorText: string): number {

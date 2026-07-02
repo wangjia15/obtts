@@ -134,8 +134,15 @@ export class EdgeTtsEngine implements TtsEngine {
   warm(voice: string, locale: string): Promise<void> {
     const loc = locale || localeFromVoice(voice);
     return this.enqueue(async () => {
-      if (voice !== this.voice || loc !== this.locale || !this.ws) await this.connect(voice, loc);
+      // The voice travels in each request's SSML, so one open socket serves any
+      // voice/locale — only (re)connect when we don't have a live one.
+      if (!this.isOpen()) await this.connect(voice, loc);
     });
+  }
+
+  /** True when the current socket exists and is ready to send. */
+  private isOpen(): boolean {
+    return !!this.ws && this.ws.readyState === WebSocket.OPEN;
   }
 
   /** Serialize all socket-touching work; one operation at a time, FIFO. */
@@ -171,7 +178,11 @@ export class EdgeTtsEngine implements TtsEngine {
     ws.on('error', () => {
       /* per-synth errors surface via onclose/reject */
     });
-    ws.on('close', () => this.failAll(new Error('Edge TTS socket closed')));
+    ws.on('close', () => {
+      // Drop the reference so the next synth/warm reconnects rather than reusing a dead socket.
+      if (this.ws === ws) this.ws = null;
+      this.failAll(new Error('Edge TTS socket closed'));
+    });
 
     // speech.config: tell the service the output format we want.
     const cfg =
@@ -195,7 +206,10 @@ export class EdgeTtsEngine implements TtsEngine {
 
   private async synthOnce(escaped: string, voice: string, locale: string, retry: boolean): Promise<ArrayBuffer> {
     if (!escaped.trim()) return new ArrayBuffer(0);
-    if (voice !== this.voice || locale !== this.locale || !this.ws) {
+    // Reconnect only when the socket is gone/closed — NOT on every voice switch.
+    // Each request carries its own voice in the SSML, so a single connection can
+    // serve mixed-language documents without tearing down between sentences.
+    if (!this.isOpen()) {
       await this.connect(voice, locale);
     }
 

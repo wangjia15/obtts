@@ -7,6 +7,7 @@ import rehypeSanitize, { defaultSchema, type Options } from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import { visit } from 'unist-util-visit';
 import type { Root, Element } from 'hast';
+import { preprocessObsidian } from './obsidian';
 
 /**
  * Render Markdown to a clean, sanitized HTML string for the reader.
@@ -59,5 +60,5 @@ const processor = unified()
   .use(rehypeStringify);
 
 export function renderMarkdownHtml(source: string): string {
-  return String(processor.processSync(source));
+  return String(processor.processSync(preprocessObsidian(source)));
 }
