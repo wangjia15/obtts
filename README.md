@@ -30,6 +30,9 @@ fallback.
   IBM Plex Mono), themes (auto / study / daylight / paper), width presets, and an
   ambient focus mode.
 - **Reads from anywhere** — the whole note, from the cursor, or just the selection.
+- **Works with K-Plex** — K-Plex's section highlight panels and paper abstract
+  cards / Paper details get a speaker button that reads their content here;
+  when the K-Plex sidecar companion is open, the reader opens in that pane.
 - **Click to navigate** — click a sentence to read from there; `Alt`+click to jump
   to that line in the source editor.
 - **Localized UI** — English, German, Spanish, French, Italian, Japanese,

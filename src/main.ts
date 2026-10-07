@@ -123,7 +123,16 @@ export default class TtsPlugin extends Plugin {
   // Commands: gather source text and open the reader
   // ---------------------------------------------------------------------
 
-  private async openReader(): Promise<ReaderView> {
+  private async openReader(preferredLeaf?: WorkspaceLeaf): Promise<ReaderView> {
+    if (preferredLeaf) {
+      // A caller-provided pane (e.g. K-Plex's sidecar companion) hosts the reader in
+      // place: focus stays with the caller, exactly like an adjacent preview pane.
+      if (!(preferredLeaf.view instanceof ReaderView)) {
+        await preferredLeaf.setViewState({ type: VIEW_TYPE, active: false });
+      }
+      if (preferredLeaf.view instanceof ReaderView) return preferredLeaf.view;
+      // A host that refuses the view falls through to the normal reader tab.
+    }
     const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
     const leaf: WorkspaceLeaf = existing ?? this.app.workspace.getLeaf(true);
     if (!existing) await leaf.setViewState({ type: VIEW_TYPE, active: true });
@@ -153,6 +162,25 @@ export default class TtsPlugin extends Plugin {
     const view = await this.openReader();
     view.player && this.controller.attachPlayer(view.player);
     this.controller.open(source, active.file.basename, { docUri: active.file });
+  }
+
+  /**
+   * Read arbitrary Markdown text aloud (e.g. a highlight or a section panel).
+   * Public interface — other plugins call this through
+   * `app.plugins.plugins.obtts.readText(...)`.
+   */
+  async readText(text: string, title: string, opts: { docUri?: TFile; baseLine?: number; leaf?: WorkspaceLeaf } = {}): Promise<void> {
+    if (!text.trim()) {
+      new Notice(t('Read Aloud: nothing readable in the selection.'));
+      return;
+    }
+    const view = await this.openReader(opts.leaf);
+    view.player && this.controller.attachPlayer(view.player);
+    this.controller.open(text, title, {
+      docUri: opts.docUri,
+      isSelection: true,
+      baseLine: opts.baseLine,
+    });
   }
 
   private async readFromCursor(editor: Editor, view: MarkdownView): Promise<void> {
