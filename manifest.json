@@ -1,7 +1,7 @@
 {
   "id": "obtts",
   "name": "Markdown Read Aloud",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "1.5.0",
   "description": "Read Markdown aloud with free neural voices — Edge TTS, sentence highlighting, auto language detection.",
   "author": "wj",
